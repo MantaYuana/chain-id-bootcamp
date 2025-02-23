@@ -1,57 +1,51 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+// import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract DidRegistry is ERC721 {
+contract DidRegistry is ERC721URIStorage, Ownable {
 
-    error NotOwner();
-    error MetadataNotChange();
+    error CannotTransfer();
+    error CannotApprove();
+    error CannotApprovalForAll();
 
-    uint256 private _tokenIdDid; // 0
+    uint256 private _tokenIdDid;
 
-    enum DidType {
-        Claimer,
-        Verifier
-    }
+    event DidCreated(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    
+    constructor() ERC721("I Putu Gunamanta Yuana", "PGM") Ownable() {}
 
-    struct DID {
-        DidType didType;
-        address owner;
-        uint256 tokenId;
-        string metadata;
-    }
-
-    mapping(uint256 => DID) public dids;
-
-    event DidCreated(uint256 indexed tokenId, address indexed owner, string metadata);
-    event DidModify(uint256 indexed tokenId, string metadata);
-
-    constructor() ERC721("Mandala Academy Blockchain", "MAB") {}
-
-    function createDID(DidType setDidType, string calldata setMetadata) external returns(uint256 tokenId) {
-        tokenId = _tokenIdDid++;
+    function createDID(string memory image) external onlyOwner {
         address _signer = msg.sender;
-        _mint(_signer, tokenId);
-        dids[tokenId] = DID(setDidType, _signer, tokenId, setMetadata);
-        emit DidCreated(tokenId, _signer, setMetadata);
+        
+        uint256 tokenId = _tokenIdDid++;
+        bytes memory _newMetadata = abi.encodePacked(
+            '{"name": "Mandala Academy NFT #1', 
+            '", "description": "A certificate NFT that student already completed the course", ',
+            '"image_url": "', image, '"}'
+        );
+
+        string memory tokenURI = string(abi.encodePacked("data:application/json;base64,", Base64.encode(_newMetadata)));
+
+        _safeMint(_signer, tokenId);
+        _setTokenURI(tokenId, tokenURI);
+        
+        emit DidCreated(_signer, tokenId, tokenURI);
     }
 
-    function modifyDid(uint256 tokenId, string memory newMetadata) external {
-        if(_ownerOf(tokenId) != msg.sender) {
-            revert NotOwner();
-        }
-
-        DID storage _did = dids[tokenId];
-        if(keccak256(abi.encodePacked(_did.metadata)) == keccak256(abi.encodePacked(newMetadata))) {
-            revert MetadataNotChange();
-        }
-
-        _did.metadata = newMetadata;
-        emit DidModify(tokenId, newMetadata);
+    function transferFrom(address, address, uint256) public pure override(ERC721, IERC721) {
+        revert CannotTransfer();
     }
 
-    function getDid(uint256 tokenId) public view returns (DID memory) {
-        return dids[tokenId];
+    function approve(address, uint256) public pure override(ERC721, IERC721) {
+        revert CannotApprove();
+    }
+
+    function setApprovalForAll(address, bool) public pure override(ERC721, IERC721) {
+        revert CannotApprovalForAll();
     }
 }

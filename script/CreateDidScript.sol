@@ -9,8 +9,8 @@ contract CreateDidScript is Script {
     function run() external {
         vm.startBroadcast();
 
-        DidRegistry registry = DidRegistry(0xf3Ec3a705d1125D073E117bb2619e7C7c39f5E1e); // input your smart contract address
-        registry.createDID(DidRegistry.DidType.Verifier, "test metadata");
+        DidRegistry registry = DidRegistry(0xe8eE25eaabb18cEB79d5225E50fA117bAaD56dA7); // input your smart contract address
+        registry.createDID("https://ipfs.io/ipfs/bafkreigxnhhmoeyg5vjfcrlr4yluostuxuivpehn77i5uzt4uc4e5zdp2i");
 
         vm.stopBroadcast();
     }
